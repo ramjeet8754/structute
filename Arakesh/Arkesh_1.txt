@@ -1,0 +1,1247 @@
+#define uint32 unsigned int
+uint32 *RCC_CR = 0x40023800;
+uint32 *RCC_AHB1ENR = 0x40023800+0x30;
+
+uint32 *GPIOG_MODER = 0x40021800;
+uint32 *GPIOG_OTYPER = 0x40021800+0x04;
+uint32 *GPIOG_OSPEEDR = 0x40021800+0x08;
+uint32 *GPIOG_PUPDR = 0x40021800+0x0C;
+uint32 *GPIOG_ODR = 0x40021800+0x14;
+
+void clock_internal_enable();
+void gpio_init();
+void blink_led();
+void main(){
+	clock_internal_enable();
+	gpio_init();
+	while(1){
+		blink_led();
+	}
+}
+
+void clock_internal_enable()
+	{
+		*RCC_CR |= (1<<0); //Enabling the internal clock
+		*RCC_AHB1ENR |= (1<<6); //Enabling the internal GPIO G
+	}
+	
+	void gpio_init()
+	{
+		*GPIOG_MODER |= (1<<26); // Enabling Pin13 as output 
+		*GPIOG_MODER &= ~(1<<27);// Enabling Pin13 as output
+		*GPIOG_OTYPER &= ~(1<<13); //Making Pin13 output type as Push Pull
+		*GPIOG_OSPEEDR &= ~(1<<27); //Enabling Medium Speed for Pin 13
+		*GPIOG_OSPEEDR |= (1<<26);// Enabling Medium Speed for Pin 13
+		*GPIOG_PUPDR &= ~(1<<27); //Enabling No Pull Push for Pin 13
+		*GPIOG_PUPDR &= ~(1<<26);// Enabling No Pull Push for Pin 13
+		
+	}
+	
+	
+	void blink_led(){
+		*GPIOG_ODR |= (1<<13);
+		
+		*GPIOG_ODR &= ~(1<<13);
+	}
+------------------------------------------------------------------
+;*******************************************************************************
+;* File Name          : startup_stm32f429xx.s
+;* Author             : MCD Application Team
+;* Description        : STM32F429x devices vector table for MDK-ARM toolchain. 
+;*                      This module performs:
+;*                      - Set the initial SP
+;*                      - Set the initial PC == Reset_Handler
+;*                      - Set the vector table entries with the exceptions ISR address
+;*                      - Branches to __main in the C library (which eventually
+;*                        calls main()).
+;*                      After Reset the CortexM4 processor is in Thread mode,
+;*                      priority is Privileged, and the Stack is set to Main.
+;********************************************************************************
+;* @attention
+;*
+;* <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
+;* All rights reserved.</center></h2>
+;*
+;* This software component is licensed by ST under BSD 3-Clause license,
+;* the "License"; You may not use this file except in compliance with the
+;* License. You may obtain a copy of the License at:
+;*                        opensource.org/licenses/BSD-3-Clause
+;*
+;*******************************************************************************
+;* <<< Use Configuration Wizard in Context Menu >>>
+;
+; Amount of memory (in bytes) allocated for Stack
+; Tailor this value to your application needs
+; <h> Stack Configuration
+;   <o> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
+; </h>
+
+Stack_Size      EQU     0x00000400
+
+                AREA    STACK, NOINIT, READWRITE, ALIGN=3
+Stack_Mem       SPACE   Stack_Size
+__initial_sp
+
+
+; <h> Heap Configuration
+;   <o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
+; </h>
+
+Heap_Size       EQU     0x00000200
+
+                AREA    HEAP, NOINIT, READWRITE, ALIGN=3
+__heap_base
+Heap_Mem        SPACE   Heap_Size
+__heap_limit
+
+                PRESERVE8
+                THUMB
+
+
+; Vector Table Mapped to Address 0 at Reset
+                AREA    RESET, DATA, READONLY
+                EXPORT  __Vectors
+                EXPORT  __Vectors_End
+                EXPORT  __Vectors_Size
+
+__Vectors       DCD     __initial_sp               ; Top of Stack
+                DCD     Reset_Handler              ; Reset Handler
+                DCD     NMI_Handler                ; NMI Handler
+                DCD     HardFault_Handler          ; Hard Fault Handler
+                DCD     MemManage_Handler          ; MPU Fault Handler
+                DCD     BusFault_Handler           ; Bus Fault Handler
+                DCD     UsageFault_Handler         ; Usage Fault Handler
+                DCD     0                          ; Reserved
+                DCD     0                          ; Reserved
+                DCD     0                          ; Reserved
+                DCD     0                          ; Reserved
+                DCD     SVC_Handler                ; SVCall Handler
+                DCD     DebugMon_Handler           ; Debug Monitor Handler
+                DCD     0                          ; Reserved
+                DCD     PendSV_Handler             ; PendSV Handler
+                DCD     SysTick_Handler            ; SysTick Handler
+
+                ; External Interrupts
+                DCD     WWDG_IRQHandler                   ; Window WatchDog                                        
+                DCD     PVD_IRQHandler                    ; PVD through EXTI Line detection                        
+                DCD     TAMP_STAMP_IRQHandler             ; Tamper and TimeStamps through the EXTI line            
+                DCD     RTC_WKUP_IRQHandler               ; RTC Wakeup through the EXTI line                       
+                DCD     FLASH_IRQHandler                  ; FLASH                                           
+                DCD     RCC_IRQHandler                    ; RCC                                             
+                DCD     EXTI0_IRQHandler                  ; EXTI Line0                                             
+                DCD     EXTI1_IRQHandler                  ; EXTI Line1                                             
+                DCD     EXTI2_IRQHandler                  ; EXTI Line2                                             
+                DCD     EXTI3_IRQHandler                  ; EXTI Line3                                             
+                DCD     EXTI4_IRQHandler                  ; EXTI Line4                                             
+                DCD     DMA1_Stream0_IRQHandler           ; DMA1 Stream 0                                   
+                DCD     DMA1_Stream1_IRQHandler           ; DMA1 Stream 1                                   
+                DCD     DMA1_Stream2_IRQHandler           ; DMA1 Stream 2                                   
+                DCD     DMA1_Stream3_IRQHandler           ; DMA1 Stream 3                                   
+                DCD     DMA1_Stream4_IRQHandler           ; DMA1 Stream 4                                   
+                DCD     DMA1_Stream5_IRQHandler           ; DMA1 Stream 5                                   
+                DCD     DMA1_Stream6_IRQHandler           ; DMA1 Stream 6                                   
+                DCD     ADC_IRQHandler                    ; ADC1, ADC2 and ADC3s                            
+                DCD     CAN1_TX_IRQHandler                ; CAN1 TX                                                
+                DCD     CAN1_RX0_IRQHandler               ; CAN1 RX0                                               
+                DCD     CAN1_RX1_IRQHandler               ; CAN1 RX1                                               
+                DCD     CAN1_SCE_IRQHandler               ; CAN1 SCE                                               
+                DCD     EXTI9_5_IRQHandler                ; External Line[9:5]s                                    
+                DCD     TIM1_BRK_TIM9_IRQHandler          ; TIM1 Break and TIM9                   
+                DCD     TIM1_UP_TIM10_IRQHandler          ; TIM1 Update and TIM10                 
+                DCD     TIM1_TRG_COM_TIM11_IRQHandler     ; TIM1 Trigger and Commutation and TIM11
+                DCD     TIM1_CC_IRQHandler                ; TIM1 Capture Compare                                   
+                DCD     TIM2_IRQHandler                   ; TIM2                                            
+                DCD     TIM3_IRQHandler                   ; TIM3                                            
+                DCD     TIM4_IRQHandler                   ; TIM4                                            
+                DCD     I2C1_EV_IRQHandler                ; I2C1 Event                                             
+                DCD     I2C1_ER_IRQHandler                ; I2C1 Error                                             
+                DCD     I2C2_EV_IRQHandler                ; I2C2 Event                                             
+                DCD     I2C2_ER_IRQHandler                ; I2C2 Error                                               
+                DCD     SPI1_IRQHandler                   ; SPI1                                            
+                DCD     SPI2_IRQHandler                   ; SPI2                                            
+                DCD     USART1_IRQHandler                 ; USART1                                          
+                DCD     USART2_IRQHandler                 ; USART2                                          
+                DCD     USART3_IRQHandler                 ; USART3                                          
+                DCD     EXTI15_10_IRQHandler              ; External Line[15:10]s                                  
+                DCD     RTC_Alarm_IRQHandler              ; RTC Alarm (A and B) through EXTI Line                  
+                DCD     OTG_FS_WKUP_IRQHandler            ; USB OTG FS Wakeup through EXTI line                        
+                DCD     TIM8_BRK_TIM12_IRQHandler         ; TIM8 Break and TIM12                  
+                DCD     TIM8_UP_TIM13_IRQHandler          ; TIM8 Update and TIM13                 
+                DCD     TIM8_TRG_COM_TIM14_IRQHandler     ; TIM8 Trigger and Commutation and TIM14
+                DCD     TIM8_CC_IRQHandler                ; TIM8 Capture Compare                                   
+                DCD     DMA1_Stream7_IRQHandler           ; DMA1 Stream7                                           
+                DCD     FMC_IRQHandler                    ; FMC                                             
+                DCD     SDIO_IRQHandler                   ; SDIO                                            
+                DCD     TIM5_IRQHandler                   ; TIM5                                            
+                DCD     SPI3_IRQHandler                   ; SPI3                                            
+                DCD     UART4_IRQHandler                  ; UART4                                           
+                DCD     UART5_IRQHandler                  ; UART5                                           
+                DCD     TIM6_DAC_IRQHandler               ; TIM6 and DAC1&2 underrun errors                   
+                DCD     TIM7_IRQHandler                   ; TIM7                   
+                DCD     DMA2_Stream0_IRQHandler           ; DMA2 Stream 0                                   
+                DCD     DMA2_Stream1_IRQHandler           ; DMA2 Stream 1                                   
+                DCD     DMA2_Stream2_IRQHandler           ; DMA2 Stream 2                                   
+                DCD     DMA2_Stream3_IRQHandler           ; DMA2 Stream 3                                   
+                DCD     DMA2_Stream4_IRQHandler           ; DMA2 Stream 4                                   
+                DCD     ETH_IRQHandler                    ; Ethernet                                        
+                DCD     ETH_WKUP_IRQHandler               ; Ethernet Wakeup through EXTI line                      
+                DCD     CAN2_TX_IRQHandler                ; CAN2 TX                                                
+                DCD     CAN2_RX0_IRQHandler               ; CAN2 RX0                                               
+                DCD     CAN2_RX1_IRQHandler               ; CAN2 RX1                                               
+                DCD     CAN2_SCE_IRQHandler               ; CAN2 SCE                                               
+                DCD     OTG_FS_IRQHandler                 ; USB OTG FS                                      
+                DCD     DMA2_Stream5_IRQHandler           ; DMA2 Stream 5                                   
+                DCD     DMA2_Stream6_IRQHandler           ; DMA2 Stream 6                                   
+                DCD     DMA2_Stream7_IRQHandler           ; DMA2 Stream 7                                   
+                DCD     USART6_IRQHandler                 ; USART6                                           
+                DCD     I2C3_EV_IRQHandler                ; I2C3 event                                             
+                DCD     I2C3_ER_IRQHandler                ; I2C3 error                                             
+                DCD     OTG_HS_EP1_OUT_IRQHandler         ; USB OTG HS End Point 1 Out                      
+                DCD     OTG_HS_EP1_IN_IRQHandler          ; USB OTG HS End Point 1 In                       
+                DCD     OTG_HS_WKUP_IRQHandler            ; USB OTG HS Wakeup through EXTI                         
+                DCD     OTG_HS_IRQHandler                 ; USB OTG HS                                      
+                DCD     DCMI_IRQHandler                   ; DCMI  
+                DCD     0                          ; Reserved				                              
+                DCD     HASH_RNG_IRQHandler               ; Hash and Rng
+                DCD     FPU_IRQHandler                    ; FPU
+                DCD     UART7_IRQHandler                  ; UART7
+                DCD     UART8_IRQHandler                  ; UART8
+                DCD     SPI4_IRQHandler                   ; SPI4
+                DCD     SPI5_IRQHandler                   ; SPI5
+                DCD     SPI6_IRQHandler                   ; SPI6
+                DCD     SAI1_IRQHandler                   ; SAI1
+                DCD     LTDC_IRQHandler                   ; LTDC
+                DCD     LTDC_ER_IRQHandler                ; LTDC error
+                DCD     DMA2D_IRQHandler                  ; DMA2D
+                                         
+__Vectors_End
+
+__Vectors_Size  EQU  __Vectors_End - __Vectors
+
+                AREA    |.text|, CODE, READONLY
+
+; Reset handler
+Reset_Handler    PROC
+                 EXPORT  Reset_Handler             [WEAK]
+        IMPORT  SystemInit
+        IMPORT  __main
+
+                 LDR     R0, =SystemInit
+                 BLX     R0
+                 LDR     R0, =__main
+                 BX      R0
+                 ENDP
+
+; Dummy Exception Handlers (infinite loops which can be modified)
+
+NMI_Handler     PROC
+                EXPORT  NMI_Handler                [WEAK]
+                B       .
+                ENDP
+HardFault_Handler\
+                PROC
+                EXPORT  HardFault_Handler          [WEAK]
+                B       .
+                ENDP
+MemManage_Handler\
+                PROC
+                EXPORT  MemManage_Handler          [WEAK]
+                B       .
+                ENDP
+BusFault_Handler\
+                PROC
+                EXPORT  BusFault_Handler           [WEAK]
+                B       .
+                ENDP
+UsageFault_Handler\
+                PROC
+                EXPORT  UsageFault_Handler         [WEAK]
+                B       .
+                ENDP
+SVC_Handler     PROC
+                EXPORT  SVC_Handler                [WEAK]
+                B       .
+                ENDP
+DebugMon_Handler\
+                PROC
+                EXPORT  DebugMon_Handler           [WEAK]
+                B       .
+                ENDP
+PendSV_Handler  PROC
+                EXPORT  PendSV_Handler             [WEAK]
+                B       .
+                ENDP
+SysTick_Handler PROC
+                EXPORT  SysTick_Handler            [WEAK]
+                B       .
+                ENDP
+
+Default_Handler PROC
+
+                EXPORT  WWDG_IRQHandler                   [WEAK]                                        
+                EXPORT  PVD_IRQHandler                    [WEAK]                      
+                EXPORT  TAMP_STAMP_IRQHandler             [WEAK]         
+                EXPORT  RTC_WKUP_IRQHandler               [WEAK]                     
+                EXPORT  FLASH_IRQHandler                  [WEAK]                                         
+                EXPORT  RCC_IRQHandler                    [WEAK]                                            
+                EXPORT  EXTI0_IRQHandler                  [WEAK]                                            
+                EXPORT  EXTI1_IRQHandler                  [WEAK]                                             
+                EXPORT  EXTI2_IRQHandler                  [WEAK]                                            
+                EXPORT  EXTI3_IRQHandler                  [WEAK]                                           
+                EXPORT  EXTI4_IRQHandler                  [WEAK]                                            
+                EXPORT  DMA1_Stream0_IRQHandler           [WEAK]                                
+                EXPORT  DMA1_Stream1_IRQHandler           [WEAK]                                   
+                EXPORT  DMA1_Stream2_IRQHandler           [WEAK]                                   
+                EXPORT  DMA1_Stream3_IRQHandler           [WEAK]                                   
+                EXPORT  DMA1_Stream4_IRQHandler           [WEAK]                                   
+                EXPORT  DMA1_Stream5_IRQHandler           [WEAK]                                   
+                EXPORT  DMA1_Stream6_IRQHandler           [WEAK]                                   
+                EXPORT  ADC_IRQHandler                    [WEAK]                         
+                EXPORT  CAN1_TX_IRQHandler                [WEAK]                                                
+                EXPORT  CAN1_RX0_IRQHandler               [WEAK]                                               
+                EXPORT  CAN1_RX1_IRQHandler               [WEAK]                                                
+                EXPORT  CAN1_SCE_IRQHandler               [WEAK]                                                
+                EXPORT  EXTI9_5_IRQHandler                [WEAK]                                    
+                EXPORT  TIM1_BRK_TIM9_IRQHandler          [WEAK]                  
+                EXPORT  TIM1_UP_TIM10_IRQHandler          [WEAK]                
+                EXPORT  TIM1_TRG_COM_TIM11_IRQHandler     [WEAK] 
+                EXPORT  TIM1_CC_IRQHandler                [WEAK]                                   
+                EXPORT  TIM2_IRQHandler                   [WEAK]                                            
+                EXPORT  TIM3_IRQHandler                   [WEAK]                                            
+                EXPORT  TIM4_IRQHandler                   [WEAK]                                            
+                EXPORT  I2C1_EV_IRQHandler                [WEAK]                                             
+                EXPORT  I2C1_ER_IRQHandler                [WEAK]                                             
+                EXPORT  I2C2_EV_IRQHandler                [WEAK]                                            
+                EXPORT  I2C2_ER_IRQHandler                [WEAK]                                               
+                EXPORT  SPI1_IRQHandler                   [WEAK]                                           
+                EXPORT  SPI2_IRQHandler                   [WEAK]                                            
+                EXPORT  USART1_IRQHandler                 [WEAK]                                          
+                EXPORT  USART2_IRQHandler                 [WEAK]                                          
+                EXPORT  USART3_IRQHandler                 [WEAK]                                         
+                EXPORT  EXTI15_10_IRQHandler              [WEAK]                                  
+                EXPORT  RTC_Alarm_IRQHandler              [WEAK]                  
+                EXPORT  OTG_FS_WKUP_IRQHandler            [WEAK]                        
+                EXPORT  TIM8_BRK_TIM12_IRQHandler         [WEAK]                 
+                EXPORT  TIM8_UP_TIM13_IRQHandler          [WEAK]                 
+                EXPORT  TIM8_TRG_COM_TIM14_IRQHandler     [WEAK] 
+                EXPORT  TIM8_CC_IRQHandler                [WEAK]                                   
+                EXPORT  DMA1_Stream7_IRQHandler           [WEAK]                                          
+                EXPORT  FMC_IRQHandler                    [WEAK]                                             
+                EXPORT  SDIO_IRQHandler                   [WEAK]                                             
+                EXPORT  TIM5_IRQHandler                   [WEAK]                                             
+                EXPORT  SPI3_IRQHandler                   [WEAK]                                             
+                EXPORT  UART4_IRQHandler                  [WEAK]                                            
+                EXPORT  UART5_IRQHandler                  [WEAK]                                            
+                EXPORT  TIM6_DAC_IRQHandler               [WEAK]                   
+                EXPORT  TIM7_IRQHandler                   [WEAK]                    
+                EXPORT  DMA2_Stream0_IRQHandler           [WEAK]                                  
+                EXPORT  DMA2_Stream1_IRQHandler           [WEAK]                                   
+                EXPORT  DMA2_Stream2_IRQHandler           [WEAK]                                    
+                EXPORT  DMA2_Stream3_IRQHandler           [WEAK]                                    
+                EXPORT  DMA2_Stream4_IRQHandler           [WEAK]                                 
+                EXPORT  ETH_IRQHandler                    [WEAK]                                         
+                EXPORT  ETH_WKUP_IRQHandler               [WEAK]                     
+                EXPORT  CAN2_TX_IRQHandler                [WEAK]                                               
+                EXPORT  CAN2_RX0_IRQHandler               [WEAK]                                               
+                EXPORT  CAN2_RX1_IRQHandler               [WEAK]                                               
+                EXPORT  CAN2_SCE_IRQHandler               [WEAK]                                               
+                EXPORT  OTG_FS_IRQHandler                 [WEAK]                                       
+                EXPORT  DMA2_Stream5_IRQHandler           [WEAK]                                   
+                EXPORT  DMA2_Stream6_IRQHandler           [WEAK]                                   
+                EXPORT  DMA2_Stream7_IRQHandler           [WEAK]                                   
+                EXPORT  USART6_IRQHandler                 [WEAK]                                           
+                EXPORT  I2C3_EV_IRQHandler                [WEAK]                                              
+                EXPORT  I2C3_ER_IRQHandler                [WEAK]                                              
+                EXPORT  OTG_HS_EP1_OUT_IRQHandler         [WEAK]                      
+                EXPORT  OTG_HS_EP1_IN_IRQHandler          [WEAK]                      
+                EXPORT  OTG_HS_WKUP_IRQHandler            [WEAK]                        
+                EXPORT  OTG_HS_IRQHandler                 [WEAK]                                      
+                EXPORT  DCMI_IRQHandler                   [WEAK]                                                                                 
+                EXPORT  HASH_RNG_IRQHandler               [WEAK]
+                EXPORT  FPU_IRQHandler                    [WEAK]
+                EXPORT  UART7_IRQHandler                  [WEAK]
+                EXPORT  UART8_IRQHandler                  [WEAK]
+                EXPORT  SPI4_IRQHandler                   [WEAK]
+                EXPORT  SPI5_IRQHandler                   [WEAK]
+                EXPORT  SPI6_IRQHandler                   [WEAK]
+                EXPORT  SAI1_IRQHandler                   [WEAK]
+                EXPORT  LTDC_IRQHandler                   [WEAK]
+                EXPORT  LTDC_ER_IRQHandler                [WEAK]
+                EXPORT  DMA2D_IRQHandler                  [WEAK]
+
+WWDG_IRQHandler                                                       
+PVD_IRQHandler                                      
+TAMP_STAMP_IRQHandler                  
+RTC_WKUP_IRQHandler                                
+FLASH_IRQHandler                                                       
+RCC_IRQHandler                                                            
+EXTI0_IRQHandler                                                          
+EXTI1_IRQHandler                                                           
+EXTI2_IRQHandler                                                          
+EXTI3_IRQHandler                                                         
+EXTI4_IRQHandler                                                          
+DMA1_Stream0_IRQHandler                                       
+DMA1_Stream1_IRQHandler                                          
+DMA1_Stream2_IRQHandler                                          
+DMA1_Stream3_IRQHandler                                          
+DMA1_Stream4_IRQHandler                                          
+DMA1_Stream5_IRQHandler                                          
+DMA1_Stream6_IRQHandler                                          
+ADC_IRQHandler                                         
+CAN1_TX_IRQHandler                                                            
+CAN1_RX0_IRQHandler                                                          
+CAN1_RX1_IRQHandler                                                           
+CAN1_SCE_IRQHandler                                                           
+EXTI9_5_IRQHandler                                                
+TIM1_BRK_TIM9_IRQHandler                        
+TIM1_UP_TIM10_IRQHandler                      
+TIM1_TRG_COM_TIM11_IRQHandler  
+TIM1_CC_IRQHandler                                               
+TIM2_IRQHandler                                                           
+TIM3_IRQHandler                                                           
+TIM4_IRQHandler                                                           
+I2C1_EV_IRQHandler                                                         
+I2C1_ER_IRQHandler                                                         
+I2C2_EV_IRQHandler                                                        
+I2C2_ER_IRQHandler                                                           
+SPI1_IRQHandler                                                          
+SPI2_IRQHandler                                                           
+USART1_IRQHandler                                                       
+USART2_IRQHandler                                                       
+USART3_IRQHandler                                                      
+EXTI15_10_IRQHandler                                            
+RTC_Alarm_IRQHandler                            
+OTG_FS_WKUP_IRQHandler                                
+TIM8_BRK_TIM12_IRQHandler                      
+TIM8_UP_TIM13_IRQHandler                       
+TIM8_TRG_COM_TIM14_IRQHandler  
+TIM8_CC_IRQHandler                                               
+DMA1_Stream7_IRQHandler                                                 
+FMC_IRQHandler                                                            
+SDIO_IRQHandler                                                            
+TIM5_IRQHandler                                                            
+SPI3_IRQHandler                                                            
+UART4_IRQHandler                                                          
+UART5_IRQHandler                                                          
+TIM6_DAC_IRQHandler                            
+TIM7_IRQHandler                              
+DMA2_Stream0_IRQHandler                                         
+DMA2_Stream1_IRQHandler                                          
+DMA2_Stream2_IRQHandler                                           
+DMA2_Stream3_IRQHandler                                           
+DMA2_Stream4_IRQHandler                                        
+ETH_IRQHandler                                                         
+ETH_WKUP_IRQHandler                                
+CAN2_TX_IRQHandler                                                           
+CAN2_RX0_IRQHandler                                                          
+CAN2_RX1_IRQHandler                                                          
+CAN2_SCE_IRQHandler                                                          
+OTG_FS_IRQHandler                                                    
+DMA2_Stream5_IRQHandler                                          
+DMA2_Stream6_IRQHandler                                          
+DMA2_Stream7_IRQHandler                                          
+USART6_IRQHandler                                                        
+I2C3_EV_IRQHandler                                                          
+I2C3_ER_IRQHandler                                                          
+OTG_HS_EP1_OUT_IRQHandler                           
+OTG_HS_EP1_IN_IRQHandler                            
+OTG_HS_WKUP_IRQHandler                                
+OTG_HS_IRQHandler                                                   
+DCMI_IRQHandler                                                                                                             
+HASH_RNG_IRQHandler
+FPU_IRQHandler  
+UART7_IRQHandler                  
+UART8_IRQHandler                  
+SPI4_IRQHandler                   
+SPI5_IRQHandler                   
+SPI6_IRQHandler                   
+SAI1_IRQHandler                   
+LTDC_IRQHandler                   
+LTDC_ER_IRQHandler                 
+DMA2D_IRQHandler                  
+                B       .
+
+                ENDP
+
+                ALIGN
+
+;*******************************************************************************
+; User Stack and Heap initialization
+;*******************************************************************************
+                 IF      :DEF:__MICROLIB
+                
+                 EXPORT  __initial_sp
+                 EXPORT  __heap_base
+                 EXPORT  __heap_limit
+                
+                 ELSE
+                
+                 IMPORT  __use_two_region_memory
+                 EXPORT  __user_initial_stackheap
+                 
+__user_initial_stackheap
+
+                 LDR     R0, =  Heap_Mem
+                 LDR     R1, =(Stack_Mem + Stack_Size)
+                 LDR     R2, = (Heap_Mem +  Heap_Size)
+                 LDR     R3, = Stack_Mem
+                 BX      LR
+
+                 ALIGN
+
+                 ENDIF
+
+                 END
+
+;************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE*****
+
+-------------------------------------------------------------
+/**
+  ******************************************************************************
+  * @file    system_stm32f4xx.c
+  * @author  MCD Application Team
+  * @brief   CMSIS Cortex-M4 Device Peripheral Access Layer System Source File.
+  *
+  *   This file provides two functions and one global variable to be called from 
+  *   user application:
+  *      - SystemInit(): This function is called at startup just after reset and 
+  *                      before branch to main program. This call is made inside
+  *                      the "startup_stm32f4xx.s" file.
+  *
+  *      - SystemCoreClock variable: Contains the core clock (HCLK), it can be used
+  *                                  by the user application to setup the SysTick 
+  *                                  timer or configure other parameters.
+  *                                     
+  *      - SystemCoreClockUpdate(): Updates the variable SystemCoreClock and must
+  *                                 be called whenever the core clock is changed
+  *                                 during program execution.
+  *
+  *
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
+  *
+  ******************************************************************************
+  */
+
+/** @addtogroup CMSIS
+  * @{
+  */
+
+/** @addtogroup stm32f4xx_system
+  * @{
+  */  
+  
+/** @addtogroup STM32F4xx_System_Private_Includes
+  * @{
+  */
+
+
+#include "stm32f4xx.h"
+
+#if !defined  (HSE_VALUE) 
+  #define HSE_VALUE    ((uint32_t)25000000) /*!< Default value of the External oscillator in Hz */
+#endif /* HSE_VALUE */
+
+#if !defined  (HSI_VALUE)
+  #define HSI_VALUE    ((uint32_t)16000000) /*!< Value of the Internal oscillator in Hz*/
+#endif /* HSI_VALUE */
+
+/**
+  * @}
+  */
+
+/** @addtogroup STM32F4xx_System_Private_TypesDefinitions
+  * @{
+  */
+
+/**
+  * @}
+  */
+
+/** @addtogroup STM32F4xx_System_Private_Defines
+  * @{
+  */
+
+/************************* Miscellaneous Configuration ************************/
+/*!< Uncomment the following line if you need to use external SRAM or SDRAM as data memory  */
+#if defined(STM32F405xx) || defined(STM32F415xx) || defined(STM32F407xx) || defined(STM32F417xx)\
+ || defined(STM32F427xx) || defined(STM32F437xx) || defined(STM32F429xx) || defined(STM32F439xx)\
+ || defined(STM32F469xx) || defined(STM32F479xx) || defined(STM32F412Zx) || defined(STM32F412Vx)
+/* #define DATA_IN_ExtSRAM */
+#endif /* STM32F40xxx || STM32F41xxx || STM32F42xxx || STM32F43xxx || STM32F469xx || STM32F479xx ||\
+          STM32F412Zx || STM32F412Vx */
+ 
+#if defined(STM32F427xx) || defined(STM32F437xx) || defined(STM32F429xx) || defined(STM32F439xx)\
+ || defined(STM32F446xx) || defined(STM32F469xx) || defined(STM32F479xx)
+/* #define DATA_IN_ExtSDRAM */
+#endif /* STM32F427xx || STM32F437xx || STM32F429xx || STM32F439xx || STM32F446xx || STM32F469xx ||\
+          STM32F479xx */
+
+/* Note: Following vector table addresses must be defined in line with linker
+         configuration. */
+/*!< Uncomment the following line if you need to relocate the vector table
+     anywhere in Flash or Sram, else the vector table is kept at the automatic
+     remap of boot address selected */
+/* #define USER_VECT_TAB_ADDRESS */
+
+#if defined(USER_VECT_TAB_ADDRESS)
+/*!< Uncomment the following line if you need to relocate your vector Table
+     in Sram else user remap will be done in Flash. */
+/* #define VECT_TAB_SRAM */
+#if defined(VECT_TAB_SRAM)
+#define VECT_TAB_BASE_ADDRESS   SRAM_BASE       /*!< Vector Table base address field.
+                                                     This value must be a multiple of 0x200. */
+#define VECT_TAB_OFFSET         0x00000000U     /*!< Vector Table base offset field.
+                                                     This value must be a multiple of 0x200. */
+#else
+#define VECT_TAB_BASE_ADDRESS   FLASH_BASE      /*!< Vector Table base address field.
+                                                     This value must be a multiple of 0x200. */
+#define VECT_TAB_OFFSET         0x00000000U     /*!< Vector Table base offset field.
+                                                     This value must be a multiple of 0x200. */
+#endif /* VECT_TAB_SRAM */
+#endif /* USER_VECT_TAB_ADDRESS */
+/******************************************************************************/
+
+/**
+  * @}
+  */
+
+/** @addtogroup STM32F4xx_System_Private_Macros
+  * @{
+  */
+
+/**
+  * @}
+  */
+
+/** @addtogroup STM32F4xx_System_Private_Variables
+  * @{
+  */
+  /* This variable is updated in three ways:
+      1) by calling CMSIS function SystemCoreClockUpdate()
+      2) by calling HAL API function HAL_RCC_GetHCLKFreq()
+      3) each time HAL_RCC_ClockConfig() is called to configure the system clock frequency 
+         Note: If you use this function to configure the system clock; then there
+               is no need to call the 2 first functions listed above, since SystemCoreClock
+               variable is updated automatically.
+  */
+uint32_t SystemCoreClock = 16000000;
+const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
+const uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
+/**
+  * @}
+  */
+
+/** @addtogroup STM32F4xx_System_Private_FunctionPrototypes
+  * @{
+  */
+
+#if defined (DATA_IN_ExtSRAM) || defined (DATA_IN_ExtSDRAM)
+  static void SystemInit_ExtMemCtl(void); 
+#endif /* DATA_IN_ExtSRAM || DATA_IN_ExtSDRAM */
+
+/**
+  * @}
+  */
+
+/** @addtogroup STM32F4xx_System_Private_Functions
+  * @{
+  */
+
+/**
+  * @brief  Setup the microcontroller system
+  *         Initialize the FPU setting, vector table location and External memory 
+  *         configuration.
+  * @param  None
+  * @retval None
+  */
+void SystemInit(void)
+{
+  /* FPU settings ------------------------------------------------------------*/
+  #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
+    SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));  /* set CP10 and CP11 Full Access */
+  #endif
+
+#if defined (DATA_IN_ExtSRAM) || defined (DATA_IN_ExtSDRAM)
+  SystemInit_ExtMemCtl(); 
+#endif /* DATA_IN_ExtSRAM || DATA_IN_ExtSDRAM */
+
+  /* Configure the Vector Table location -------------------------------------*/
+#if defined(USER_VECT_TAB_ADDRESS)
+  SCB->VTOR = VECT_TAB_BASE_ADDRESS | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM */
+#endif /* USER_VECT_TAB_ADDRESS */
+}
+
+/**
+   * @brief  Update SystemCoreClock variable according to Clock Register Values.
+  *         The SystemCoreClock variable contains the core clock (HCLK), it can
+  *         be used by the user application to setup the SysTick timer or configure
+  *         other parameters.
+  *           
+  * @note   Each time the core clock (HCLK) changes, this function must be called
+  *         to update SystemCoreClock variable value. Otherwise, any configuration
+  *         based on this variable will be incorrect.         
+  *     
+  * @note   - The system frequency computed by this function is not the real 
+  *           frequency in the chip. It is calculated based on the predefined 
+  *           constant and the selected clock source:
+  *             
+  *           - If SYSCLK source is HSI, SystemCoreClock will contain the HSI_VALUE(*)
+  *                                              
+  *           - If SYSCLK source is HSE, SystemCoreClock will contain the HSE_VALUE(**)
+  *                          
+  *           - If SYSCLK source is PLL, SystemCoreClock will contain the HSE_VALUE(**) 
+  *             or HSI_VALUE(*) multiplied/divided by the PLL factors.
+  *         
+  *         (*) HSI_VALUE is a constant defined in stm32f4xx_hal_conf.h file (default value
+  *             16 MHz) but the real value may vary depending on the variations
+  *             in voltage and temperature.   
+  *    
+  *         (**) HSE_VALUE is a constant defined in stm32f4xx_hal_conf.h file (its value
+  *              depends on the application requirements), user has to ensure that HSE_VALUE
+  *              is same as the real frequency of the crystal used. Otherwise, this function
+  *              may have wrong result.
+  *                
+  *         - The result of this function could be not correct when using fractional
+  *           value for HSE crystal.
+  *     
+  * @param  None
+  * @retval None
+  */
+void SystemCoreClockUpdate(void)
+{
+  uint32_t tmp = 0, pllvco = 0, pllp = 2, pllsource = 0, pllm = 2;
+  
+  /* Get SYSCLK source -------------------------------------------------------*/
+  tmp = RCC->CFGR & RCC_CFGR_SWS;
+
+  switch (tmp)
+  {
+    case 0x00:  /* HSI used as system clock source */
+      SystemCoreClock = HSI_VALUE;
+      break;
+    case 0x04:  /* HSE used as system clock source */
+      SystemCoreClock = HSE_VALUE;
+      break;
+    case 0x08:  /* PLL used as system clock source */
+
+      /* PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N
+         SYSCLK = PLL_VCO / PLL_P
+         */    
+      pllsource = (RCC->PLLCFGR & RCC_PLLCFGR_PLLSRC) >> 22;
+      pllm = RCC->PLLCFGR & RCC_PLLCFGR_PLLM;
+      
+      if (pllsource != 0)
+      {
+        /* HSE used as PLL clock source */
+        pllvco = (HSE_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);
+      }
+      else
+      {
+        /* HSI used as PLL clock source */
+        pllvco = (HSI_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);
+      }
+
+      pllp = (((RCC->PLLCFGR & RCC_PLLCFGR_PLLP) >>16) + 1 ) *2;
+      SystemCoreClock = pllvco/pllp;
+      break;
+    default:
+      SystemCoreClock = HSI_VALUE;
+      break;
+  }
+  /* Compute HCLK frequency --------------------------------------------------*/
+  /* Get HCLK prescaler */
+  tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4)];
+  /* HCLK frequency */
+  SystemCoreClock >>= tmp;
+}
+
+#if defined (DATA_IN_ExtSRAM) && defined (DATA_IN_ExtSDRAM)
+#if defined(STM32F427xx) || defined(STM32F437xx) || defined(STM32F429xx) || defined(STM32F439xx)\
+ || defined(STM32F469xx) || defined(STM32F479xx)
+/**
+  * @brief  Setup the external memory controller.
+  *         Called in startup_stm32f4xx.s before jump to main.
+  *         This function configures the external memories (SRAM/SDRAM)
+  *         This SRAM/SDRAM will be used as program data memory (including heap and stack).
+  * @param  None
+  * @retval None
+  */
+void SystemInit_ExtMemCtl(void)
+{
+  __IO uint32_t tmp = 0x00;
+
+  register uint32_t tmpreg = 0, timeout = 0xFFFF;
+  register __IO uint32_t index;
+
+  /* Enable GPIOC, GPIOD, GPIOE, GPIOF, GPIOG, GPIOH and GPIOI interface clock */
+  RCC->AHB1ENR |= 0x000001F8;
+
+  /* Delay after an RCC peripheral clock enabling */
+  tmp = READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN);
+  
+  /* Connect PDx pins to FMC Alternate function */
+  GPIOD->AFR[0]  = 0x00CCC0CC;
+  GPIOD->AFR[1]  = 0xCCCCCCCC;
+  /* Configure PDx pins in Alternate function mode */  
+  GPIOD->MODER   = 0xAAAA0A8A;
+  /* Configure PDx pins speed to 100 MHz */  
+  GPIOD->OSPEEDR = 0xFFFF0FCF;
+  /* Configure PDx pins Output type to push-pull */  
+  GPIOD->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PDx pins */ 
+  GPIOD->PUPDR   = 0x00000000;
+
+  /* Connect PEx pins to FMC Alternate function */
+  GPIOE->AFR[0]  = 0xC00CC0CC;
+  GPIOE->AFR[1]  = 0xCCCCCCCC;
+  /* Configure PEx pins in Alternate function mode */ 
+  GPIOE->MODER   = 0xAAAA828A;
+  /* Configure PEx pins speed to 100 MHz */ 
+  GPIOE->OSPEEDR = 0xFFFFC3CF;
+  /* Configure PEx pins Output type to push-pull */  
+  GPIOE->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PEx pins */ 
+  GPIOE->PUPDR   = 0x00000000;
+  
+  /* Connect PFx pins to FMC Alternate function */
+  GPIOF->AFR[0]  = 0xCCCCCCCC;
+  GPIOF->AFR[1]  = 0xCCCCCCCC;
+  /* Configure PFx pins in Alternate function mode */   
+  GPIOF->MODER   = 0xAA800AAA;
+  /* Configure PFx pins speed to 50 MHz */ 
+  GPIOF->OSPEEDR = 0xAA800AAA;
+  /* Configure PFx pins Output type to push-pull */  
+  GPIOF->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PFx pins */ 
+  GPIOF->PUPDR   = 0x00000000;
+
+  /* Connect PGx pins to FMC Alternate function */
+  GPIOG->AFR[0]  = 0xCCCCCCCC;
+  GPIOG->AFR[1]  = 0xCCCCCCCC;
+  /* Configure PGx pins in Alternate function mode */ 
+  GPIOG->MODER   = 0xAAAAAAAA;
+  /* Configure PGx pins speed to 50 MHz */ 
+  GPIOG->OSPEEDR = 0xAAAAAAAA;
+  /* Configure PGx pins Output type to push-pull */  
+  GPIOG->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PGx pins */ 
+  GPIOG->PUPDR   = 0x00000000;
+  
+  /* Connect PHx pins to FMC Alternate function */
+  GPIOH->AFR[0]  = 0x00C0CC00;
+  GPIOH->AFR[1]  = 0xCCCCCCCC;
+  /* Configure PHx pins in Alternate function mode */ 
+  GPIOH->MODER   = 0xAAAA08A0;
+  /* Configure PHx pins speed to 50 MHz */ 
+  GPIOH->OSPEEDR = 0xAAAA08A0;
+  /* Configure PHx pins Output type to push-pull */  
+  GPIOH->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PHx pins */ 
+  GPIOH->PUPDR   = 0x00000000;
+  
+  /* Connect PIx pins to FMC Alternate function */
+  GPIOI->AFR[0]  = 0xCCCCCCCC;
+  GPIOI->AFR[1]  = 0x00000CC0;
+  /* Configure PIx pins in Alternate function mode */ 
+  GPIOI->MODER   = 0x0028AAAA;
+  /* Configure PIx pins speed to 50 MHz */ 
+  GPIOI->OSPEEDR = 0x0028AAAA;
+  /* Configure PIx pins Output type to push-pull */  
+  GPIOI->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PIx pins */ 
+  GPIOI->PUPDR   = 0x00000000;
+  
+/*-- FMC Configuration -------------------------------------------------------*/
+  /* Enable the FMC interface clock */
+  RCC->AHB3ENR |= 0x00000001;
+  /* Delay after an RCC peripheral clock enabling */
+  tmp = READ_BIT(RCC->AHB3ENR, RCC_AHB3ENR_FMCEN);
+
+  FMC_Bank5_6->SDCR[0] = 0x000019E4;
+  FMC_Bank5_6->SDTR[0] = 0x01115351;      
+  
+  /* SDRAM initialization sequence */
+  /* Clock enable command */
+  FMC_Bank5_6->SDCMR = 0x00000011; 
+  tmpreg = FMC_Bank5_6->SDSR & 0x00000020; 
+  while((tmpreg != 0) && (timeout-- > 0))
+  {
+    tmpreg = FMC_Bank5_6->SDSR & 0x00000020; 
+  }
+
+  /* Delay */
+  for (index = 0; index<1000; index++);
+  
+  /* PALL command */
+  FMC_Bank5_6->SDCMR = 0x00000012;           
+  tmpreg = FMC_Bank5_6->SDSR & 0x00000020;
+  timeout = 0xFFFF;
+  while((tmpreg != 0) && (timeout-- > 0))
+  {
+    tmpreg = FMC_Bank5_6->SDSR & 0x00000020; 
+  }
+  
+  /* Auto refresh command */
+  FMC_Bank5_6->SDCMR = 0x00000073;
+  tmpreg = FMC_Bank5_6->SDSR & 0x00000020;
+  timeout = 0xFFFF;
+  while((tmpreg != 0) && (timeout-- > 0))
+  {
+    tmpreg = FMC_Bank5_6->SDSR & 0x00000020; 
+  }
+ 
+  /* MRD register program */
+  FMC_Bank5_6->SDCMR = 0x00046014;
+  tmpreg = FMC_Bank5_6->SDSR & 0x00000020;
+  timeout = 0xFFFF;
+  while((tmpreg != 0) && (timeout-- > 0))
+  {
+    tmpreg = FMC_Bank5_6->SDSR & 0x00000020; 
+  } 
+  
+  /* Set refresh count */
+  tmpreg = FMC_Bank5_6->SDRTR;
+  FMC_Bank5_6->SDRTR = (tmpreg | (0x0000027C<<1));
+  
+  /* Disable write protection */
+  tmpreg = FMC_Bank5_6->SDCR[0]; 
+  FMC_Bank5_6->SDCR[0] = (tmpreg & 0xFFFFFDFF);
+
+#if defined(STM32F427xx) || defined(STM32F437xx) || defined(STM32F429xx) || defined(STM32F439xx)
+  /* Configure and enable Bank1_SRAM2 */
+  FMC_Bank1->BTCR[2]  = 0x00001011;
+  FMC_Bank1->BTCR[3]  = 0x00000201;
+  FMC_Bank1E->BWTR[2] = 0x0fffffff;
+#endif /* STM32F427xx || STM32F437xx || STM32F429xx || STM32F439xx */ 
+#if defined(STM32F469xx) || defined(STM32F479xx)
+  /* Configure and enable Bank1_SRAM2 */
+  FMC_Bank1->BTCR[2]  = 0x00001091;
+  FMC_Bank1->BTCR[3]  = 0x00110212;
+  FMC_Bank1E->BWTR[2] = 0x0fffffff;
+#endif /* STM32F469xx || STM32F479xx */
+
+  (void)(tmp); 
+}
+#endif /* STM32F427xx || STM32F437xx || STM32F429xx || STM32F439xx || STM32F469xx || STM32F479xx */
+#elif defined (DATA_IN_ExtSRAM) || defined (DATA_IN_ExtSDRAM)
+/**
+  * @brief  Setup the external memory controller.
+  *         Called in startup_stm32f4xx.s before jump to main.
+  *         This function configures the external memories (SRAM/SDRAM)
+  *         This SRAM/SDRAM will be used as program data memory (including heap and stack).
+  * @param  None
+  * @retval None
+  */
+void SystemInit_ExtMemCtl(void)
+{
+  __IO uint32_t tmp = 0x00;
+#if defined(STM32F427xx) || defined(STM32F437xx) || defined(STM32F429xx) || defined(STM32F439xx)\
+ || defined(STM32F446xx) || defined(STM32F469xx) || defined(STM32F479xx)
+#if defined (DATA_IN_ExtSDRAM)
+  register uint32_t tmpreg = 0, timeout = 0xFFFF;
+  register __IO uint32_t index;
+
+#if defined(STM32F446xx)
+  /* Enable GPIOA, GPIOC, GPIOD, GPIOE, GPIOF, GPIOG interface
+      clock */
+  RCC->AHB1ENR |= 0x0000007D;
+#else
+  /* Enable GPIOC, GPIOD, GPIOE, GPIOF, GPIOG, GPIOH and GPIOI interface 
+      clock */
+  RCC->AHB1ENR |= 0x000001F8;
+#endif /* STM32F446xx */  
+  /* Delay after an RCC peripheral clock enabling */
+  tmp = READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN);
+  
+#if defined(STM32F446xx)
+  /* Connect PAx pins to FMC Alternate function */
+  GPIOA->AFR[0]  |= 0xC0000000;
+  GPIOA->AFR[1]  |= 0x00000000;
+  /* Configure PDx pins in Alternate function mode */
+  GPIOA->MODER   |= 0x00008000;
+  /* Configure PDx pins speed to 50 MHz */
+  GPIOA->OSPEEDR |= 0x00008000;
+  /* Configure PDx pins Output type to push-pull */
+  GPIOA->OTYPER  |= 0x00000000;
+  /* No pull-up, pull-down for PDx pins */
+  GPIOA->PUPDR   |= 0x00000000;
+
+  /* Connect PCx pins to FMC Alternate function */
+  GPIOC->AFR[0]  |= 0x00CC0000;
+  GPIOC->AFR[1]  |= 0x00000000;
+  /* Configure PDx pins in Alternate function mode */
+  GPIOC->MODER   |= 0x00000A00;
+  /* Configure PDx pins speed to 50 MHz */
+  GPIOC->OSPEEDR |= 0x00000A00;
+  /* Configure PDx pins Output type to push-pull */
+  GPIOC->OTYPER  |= 0x00000000;
+  /* No pull-up, pull-down for PDx pins */
+  GPIOC->PUPDR   |= 0x00000000;
+#endif /* STM32F446xx */
+
+  /* Connect PDx pins to FMC Alternate function */
+  GPIOD->AFR[0]  = 0x000000CC;
+  GPIOD->AFR[1]  = 0xCC000CCC;
+  /* Configure PDx pins in Alternate function mode */  
+  GPIOD->MODER   = 0xA02A000A;
+  /* Configure PDx pins speed to 50 MHz */  
+  GPIOD->OSPEEDR = 0xA02A000A;
+  /* Configure PDx pins Output type to push-pull */  
+  GPIOD->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PDx pins */ 
+  GPIOD->PUPDR   = 0x00000000;
+
+  /* Connect PEx pins to FMC Alternate function */
+  GPIOE->AFR[0]  = 0xC00000CC;
+  GPIOE->AFR[1]  = 0xCCCCCCCC;
+  /* Configure PEx pins in Alternate function mode */ 
+  GPIOE->MODER   = 0xAAAA800A;
+  /* Configure PEx pins speed to 50 MHz */ 
+  GPIOE->OSPEEDR = 0xAAAA800A;
+  /* Configure PEx pins Output type to push-pull */  
+  GPIOE->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PEx pins */ 
+  GPIOE->PUPDR   = 0x00000000;
+
+  /* Connect PFx pins to FMC Alternate function */
+  GPIOF->AFR[0]  = 0xCCCCCCCC;
+  GPIOF->AFR[1]  = 0xCCCCCCCC;
+  /* Configure PFx pins in Alternate function mode */   
+  GPIOF->MODER   = 0xAA800AAA;
+  /* Configure PFx pins speed to 50 MHz */ 
+  GPIOF->OSPEEDR = 0xAA800AAA;
+  /* Configure PFx pins Output type to push-pull */  
+  GPIOF->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PFx pins */ 
+  GPIOF->PUPDR   = 0x00000000;
+
+  /* Connect PGx pins to FMC Alternate function */
+  GPIOG->AFR[0]  = 0xCCCCCCCC;
+  GPIOG->AFR[1]  = 0xCCCCCCCC;
+  /* Configure PGx pins in Alternate function mode */ 
+  GPIOG->MODER   = 0xAAAAAAAA;
+  /* Configure PGx pins speed to 50 MHz */ 
+  GPIOG->OSPEEDR = 0xAAAAAAAA;
+  /* Configure PGx pins Output type to push-pull */  
+  GPIOG->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PGx pins */ 
+  GPIOG->PUPDR   = 0x00000000;
+
+#if defined(STM32F427xx) || defined(STM32F437xx) || defined(STM32F429xx) || defined(STM32F439xx)\
+ || defined(STM32F469xx) || defined(STM32F479xx)  
+  /* Connect PHx pins to FMC Alternate function */
+  GPIOH->AFR[0]  = 0x00C0CC00;
+  GPIOH->AFR[1]  = 0xCCCCCCCC;
+  /* Configure PHx pins in Alternate function mode */ 
+  GPIOH->MODER   = 0xAAAA08A0;
+  /* Configure PHx pins speed to 50 MHz */ 
+  GPIOH->OSPEEDR = 0xAAAA08A0;
+  /* Configure PHx pins Output type to push-pull */  
+  GPIOH->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PHx pins */ 
+  GPIOH->PUPDR   = 0x00000000;
+  
+  /* Connect PIx pins to FMC Alternate function */
+  GPIOI->AFR[0]  = 0xCCCCCCCC;
+  GPIOI->AFR[1]  = 0x00000CC0;
+  /* Configure PIx pins in Alternate function mode */ 
+  GPIOI->MODER   = 0x0028AAAA;
+  /* Configure PIx pins speed to 50 MHz */ 
+  GPIOI->OSPEEDR = 0x0028AAAA;
+  /* Configure PIx pins Output type to push-pull */  
+  GPIOI->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PIx pins */ 
+  GPIOI->PUPDR   = 0x00000000;
+#endif /* STM32F427xx || STM32F437xx || STM32F429xx || STM32F439xx || STM32F469xx || STM32F479xx */
+  
+/*-- FMC Configuration -------------------------------------------------------*/
+  /* Enable the FMC interface clock */
+  RCC->AHB3ENR |= 0x00000001;
+  /* Delay after an RCC peripheral clock enabling */
+  tmp = READ_BIT(RCC->AHB3ENR, RCC_AHB3ENR_FMCEN);
+
+  /* Configure and enable SDRAM bank1 */
+#if defined(STM32F446xx)
+  FMC_Bank5_6->SDCR[0] = 0x00001954;
+#else  
+  FMC_Bank5_6->SDCR[0] = 0x000019E4;
+#endif /* STM32F446xx */
+  FMC_Bank5_6->SDTR[0] = 0x01115351;      
+  
+  /* SDRAM initialization sequence */
+  /* Clock enable command */
+  FMC_Bank5_6->SDCMR = 0x00000011; 
+  tmpreg = FMC_Bank5_6->SDSR & 0x00000020; 
+  while((tmpreg != 0) && (timeout-- > 0))
+  {
+    tmpreg = FMC_Bank5_6->SDSR & 0x00000020; 
+  }
+
+  /* Delay */
+  for (index = 0; index<1000; index++);
+  
+  /* PALL command */
+  FMC_Bank5_6->SDCMR = 0x00000012;           
+  tmpreg = FMC_Bank5_6->SDSR & 0x00000020;
+  timeout = 0xFFFF;
+  while((tmpreg != 0) && (timeout-- > 0))
+  {
+    tmpreg = FMC_Bank5_6->SDSR & 0x00000020; 
+  }
+  
+  /* Auto refresh command */
+#if defined(STM32F446xx)
+  FMC_Bank5_6->SDCMR = 0x000000F3;
+#else  
+  FMC_Bank5_6->SDCMR = 0x00000073;
+#endif /* STM32F446xx */
+  tmpreg = FMC_Bank5_6->SDSR & 0x00000020;
+  timeout = 0xFFFF;
+  while((tmpreg != 0) && (timeout-- > 0))
+  {
+    tmpreg = FMC_Bank5_6->SDSR & 0x00000020; 
+  }
+ 
+  /* MRD register program */
+#if defined(STM32F446xx)
+  FMC_Bank5_6->SDCMR = 0x00044014;
+#else  
+  FMC_Bank5_6->SDCMR = 0x00046014;
+#endif /* STM32F446xx */
+  tmpreg = FMC_Bank5_6->SDSR & 0x00000020;
+  timeout = 0xFFFF;
+  while((tmpreg != 0) && (timeout-- > 0))
+  {
+    tmpreg = FMC_Bank5_6->SDSR & 0x00000020; 
+  } 
+  
+  /* Set refresh count */
+  tmpreg = FMC_Bank5_6->SDRTR;
+#if defined(STM32F446xx)
+  FMC_Bank5_6->SDRTR = (tmpreg | (0x0000050C<<1));
+#else    
+  FMC_Bank5_6->SDRTR = (tmpreg | (0x0000027C<<1));
+#endif /* STM32F446xx */
+  
+  /* Disable write protection */
+  tmpreg = FMC_Bank5_6->SDCR[0]; 
+  FMC_Bank5_6->SDCR[0] = (tmpreg & 0xFFFFFDFF);
+#endif /* DATA_IN_ExtSDRAM */
+#endif /* STM32F427xx || STM32F437xx || STM32F429xx || STM32F439xx || STM32F446xx || STM32F469xx || STM32F479xx */
+
+#if defined(STM32F405xx) || defined(STM32F415xx) || defined(STM32F407xx) || defined(STM32F417xx)\
+ || defined(STM32F427xx) || defined(STM32F437xx) || defined(STM32F429xx) || defined(STM32F439xx)\
+ || defined(STM32F469xx) || defined(STM32F479xx) || defined(STM32F412Zx) || defined(STM32F412Vx)
+
+#if defined(DATA_IN_ExtSRAM)
+/*-- GPIOs Configuration -----------------------------------------------------*/
+   /* Enable GPIOD, GPIOE, GPIOF and GPIOG interface clock */
+  RCC->AHB1ENR   |= 0x00000078;
+  /* Delay after an RCC peripheral clock enabling */
+  tmp = READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIODEN);
+  
+  /* Connect PDx pins to FMC Alternate function */
+  GPIOD->AFR[0]  = 0x00CCC0CC;
+  GPIOD->AFR[1]  = 0xCCCCCCCC;
+  /* Configure PDx pins in Alternate function mode */  
+  GPIOD->MODER   = 0xAAAA0A8A;
+  /* Configure PDx pins speed to 100 MHz */  
+  GPIOD->OSPEEDR = 0xFFFF0FCF;
+  /* Configure PDx pins Output type to push-pull */  
+  GPIOD->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PDx pins */ 
+  GPIOD->PUPDR   = 0x00000000;
+
+  /* Connect PEx pins to FMC Alternate function */
+  GPIOE->AFR[0]  = 0xC00CC0CC;
+  GPIOE->AFR[1]  = 0xCCCCCCCC;
+  /* Configure PEx pins in Alternate function mode */ 
+  GPIOE->MODER   = 0xAAAA828A;
+  /* Configure PEx pins speed to 100 MHz */ 
+  GPIOE->OSPEEDR = 0xFFFFC3CF;
+  /* Configure PEx pins Output type to push-pull */  
+  GPIOE->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PEx pins */ 
+  GPIOE->PUPDR   = 0x00000000;
+
+  /* Connect PFx pins to FMC Alternate function */
+  GPIOF->AFR[0]  = 0x00CCCCCC;
+  GPIOF->AFR[1]  = 0xCCCC0000;
+  /* Configure PFx pins in Alternate function mode */   
+  GPIOF->MODER   = 0xAA000AAA;
+  /* Configure PFx pins speed to 100 MHz */ 
+  GPIOF->OSPEEDR = 0xFF000FFF;
+  /* Configure PFx pins Output type to push-pull */  
+  GPIOF->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PFx pins */ 
+  GPIOF->PUPDR   = 0x00000000;
+
+  /* Connect PGx pins to FMC Alternate function */
+  GPIOG->AFR[0]  = 0x00CCCCCC;
+  GPIOG->AFR[1]  = 0x000000C0;
+  /* Configure PGx pins in Alternate function mode */ 
+  GPIOG->MODER   = 0x00085AAA;
+  /* Configure PGx pins speed to 100 MHz */ 
+  GPIOG->OSPEEDR = 0x000CAFFF;
+  /* Configure PGx pins Output type to push-pull */  
+  GPIOG->OTYPER  = 0x00000000;
+  /* No pull-up, pull-down for PGx pins */ 
+  GPIOG->PUPDR   = 0x00000000;
+  
+/*-- FMC/FSMC Configuration --------------------------------------------------*/
+  /* Enable the FMC/FSMC interface clock */
+  RCC->AHB3ENR         |= 0x00000001;
+
+#if defined(STM32F427xx) || defined(STM32F437xx) || defined(STM32F429xx) || defined(STM32F439xx)
+  /* Delay after an RCC peripheral clock enabling */
+  tmp = READ_BIT(RCC->AHB3ENR, RCC_AHB3ENR_FMCEN);
+  /* Configure and enable Bank1_SRAM2 */
+  FMC_Bank1->BTCR[2]  = 0x00001011;
+  FMC_Bank1->BTCR[3]  = 0x00000201;
+  FMC_Bank1E->BWTR[2] = 0x0fffffff;
+#endif /* STM32F427xx || STM32F437xx || STM32F429xx || STM32F439xx */ 
+#if defined(STM32F469xx) || defined(STM32F479xx)
+  /* Delay after an RCC peripheral clock enabling */
+  tmp = READ_BIT(RCC->AHB3ENR, RCC_AHB3ENR_FMCEN);
+  /* Configure and enable Bank1_SRAM2 */
+  FMC_Bank1->BTCR[2]  = 0x00001091;
+  FMC_Bank1->BTCR[3]  = 0x00110212;
+  FMC_Bank1E->BWTR[2] = 0x0fffffff;
+#endif /* STM32F469xx || STM32F479xx */
+#if defined(STM32F405xx) || defined(STM32F415xx) || defined(STM32F407xx)|| defined(STM32F417xx)\
+   || defined(STM32F412Zx) || defined(STM32F412Vx)
+  /* Delay after an RCC peripheral clock enabling */
+  tmp = READ_BIT(RCC->AHB3ENR, RCC_AHB3ENR_FSMCEN);
+  /* Configure and enable Bank1_SRAM2 */
+  FSMC_Bank1->BTCR[2]  = 0x00001011;
+  FSMC_Bank1->BTCR[3]  = 0x00000201;
+  FSMC_Bank1E->BWTR[2] = 0x0FFFFFFF;
+#endif /* STM32F405xx || STM32F415xx || STM32F407xx || STM32F417xx || STM32F412Zx || STM32F412Vx */
+
+#endif /* DATA_IN_ExtSRAM */
+#endif /* STM32F405xx || STM32F415xx || STM32F407xx || STM32F417xx || STM32F427xx || STM32F437xx ||\
+          STM32F429xx || STM32F439xx || STM32F469xx || STM32F479xx || STM32F412Zx || STM32F412Vx  */ 
+  (void)(tmp); 
+}
+#endif /* DATA_IN_ExtSRAM && DATA_IN_ExtSDRAM */
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
